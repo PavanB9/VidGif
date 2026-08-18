@@ -1,0 +1,43 @@
+appId: com.vidgif.app
+productName: VidGif
+directories:
+  buildResources: resources
+  output: dist
+
+files:
+  - out/**
+  - package.json
+
+# CRITICAL: a binary cannot be executed from inside app.asar. ffmpeg-static's
+# binary must be unpacked to app.asar.unpacked, and src/main/ffmpeg.ts rewrites
+# the path to match. Change one without the other and the packaged app breaks
+# while `npm run dev` keeps working.
+asarUnpack:
+  - "**/node_modules/ffmpeg-static/**"
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: ${productName}-${version}-Setup.${ext}
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+
+mac:
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  category: public.app-category.video
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
