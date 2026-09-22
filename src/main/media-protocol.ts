@@ -99,8 +99,16 @@ export function handleMediaScheme(): void {
       })
     }
 
-    const start = match[1] ? Number(match[1]) : 0
-    const end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1
+    // `bytes=-N` is a SUFFIX range — the LAST n bytes, not bytes 0..n.
+    let start: number
+    let end: number
+    if (!match[1] && match[2]) {
+      start = Math.max(0, size - Number(match[2]))
+      end = size - 1
+    } else {
+      start = match[1] ? Number(match[1]) : 0
+      end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1
+    }
 
     if (Number.isNaN(start) || start >= size || end < start) {
       return new Response('Range not satisfiable', {

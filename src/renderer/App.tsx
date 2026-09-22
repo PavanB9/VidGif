@@ -97,6 +97,13 @@ export default function App(): React.JSX.Element {
   }, [video, start, end, fps, effectiveWidth, quality, direction, speed, loop, crop])
 
   const loadVideo = useCallback(async (path: string) => {
+    // jobIdRef is non-null for the whole life of a conversion. Replacing the
+    // source mid-run would leave that ffmpeg process going while resetting
+    // status to idle — which also hides the Cancel button, stranding the job.
+    if (jobIdRef.current) {
+      setLoadError('Finish or cancel the current conversion before opening another video.')
+      return
+    }
     try {
       setLoadError(null)
       setPreviewFailed(false)
@@ -238,6 +245,9 @@ export default function App(): React.JSX.Element {
         e.preventDefault()
         void createGif()
       } else if (e.key === ' ' && video && !previewFailed) {
+        // Space is how a keyboard user activates a focused button; hijacking it
+        // for play/pause would make the settings controls unusable by keyboard.
+        if (tag === 'BUTTON') return
         e.preventDefault()
         setPlaying((p) => !p)
       }

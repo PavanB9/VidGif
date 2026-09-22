@@ -7,8 +7,14 @@ import type { GifSettings, QualityPreset } from './types'
 
 export const clamp = (n: number, min: number, max: number): number => Math.min(max, Math.max(min, n))
 
-/** GIF dimensions must be even for most scalers/encoders to behave. */
+/** GIF dimensions must be even for most scalers/encoders to behave.
+ *  Floors, so it is safe for clamping a value against a ceiling. */
 export const even = (n: number): number => Math.max(2, Math.floor(n / 2) * 2)
+
+/** ffmpeg's `scale=W:-2` rounds the derived dimension to the NEAREST even
+ *  number, so the height shown in the UI has to use the same rule. Flooring it
+ *  instead made a 640x358 source read "320x178" while ffmpeg wrote 320x180. */
+const roundEven = (n: number): number => Math.max(2, Math.round(n / 2) * 2)
 
 export function cropPixels(s: GifSettings): { x: number; y: number; w: number; h: number } | null {
   if (!s.crop) return null
@@ -29,7 +35,7 @@ export function outputDimensions(s: GifSettings): { width: number; height: numbe
   const srcH = c ? c.h : s.sourceHeight
   if (srcW <= 0 || srcH <= 0) return { width: 2, height: 2 }
   const width = even(clamp(s.width, 16, srcW))
-  const height = even(Math.round((width * srcH) / srcW))
+  const height = roundEven((width * srcH) / srcW)
   return { width, height }
 }
 

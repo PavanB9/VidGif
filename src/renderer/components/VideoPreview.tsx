@@ -32,12 +32,19 @@ export default function VideoPreview({
   const aspect = sourceHeight > 0 ? sourceWidth / sourceHeight : 16 / 9
 
   return (
-    <div className="flex min-h-0 flex-1 items-center justify-center">
-      {/* Matching the container to the video's aspect ratio means there is no
-          letterboxing, so the crop overlay maps 1:1 onto the visible frame. */}
+    <div className="relative min-h-0 flex-1">
+      {/*
+        The box must end up EXACTLY the size of the rendered video, because the
+        crop overlay is positioned against it. `width: 100%` + `max-height`
+        could not do that: for a portrait clip the width stayed at 100% while
+        max-height clamped the height, so the box was far wider than the
+        letterboxed video and crop coordinates mapped to the wrong region.
+        `position: absolute; inset: 0; margin: auto` with only max-width /
+        max-height constraints shrinks the aspect box to fit and centres it.
+      */}
       <div
-        className="relative max-h-full max-w-full overflow-hidden rounded-xl bg-stone-900 shadow-sm ring-1 ring-stone-200 dark:ring-stone-800"
-        style={{ aspectRatio: String(aspect), width: '100%' }}
+        className="absolute inset-0 m-auto overflow-hidden rounded-xl bg-stone-900 shadow-sm ring-1 ring-stone-200 dark:ring-stone-800"
+        style={{ aspectRatio: String(aspect), maxWidth: '100%', maxHeight: '100%' }}
       >
         {previewFailed ? (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 px-6 text-center">
